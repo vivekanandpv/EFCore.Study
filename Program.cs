@@ -43,6 +43,10 @@ internal class Program
     {
         var context = new SalesManagementContext();
 
+        //  IQueryable<T> is a subtype of IEnumerable<T>
+        //  https://learn.microsoft.com/en-us/dotnet/api/system.linq.iqueryable-1?view=net-7.0
+        //  Also read this: https://stackoverflow.com/a/252857/3969961
+
         CustomerViewModel[] viewModels = await context.Customers
             .Select(c => 
                 new CustomerViewModel
