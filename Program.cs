@@ -3,33 +3,28 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EFCore.Study;
 
-//  Step 1
-//  An entity class is a POCO class with simple public auto properties
-//  Since the conventional name of the table is a pluralized form,
-//  we use [Table] annotation to provide custom name
-[Table("Customer")] //  we are using singular name
+//  EF Core provides LINQ operators as extension methods on IQueryable<T>
+//  These operators form LINQ-to-entities approach
+//  These operators are extension methods defined in Queryable static class
+//  https://learn.microsoft.com/en-us/dotnet/api/system.linq.queryable?view=net-7.0
+
+//  Most of these data-access methods come in async variants
+//  It is recommended to use async methods
+
+[Table("Customer")]
 public class Customer
 {
-    //  properties are conventionally named
     public int CustomerId { get; set; }
     public string LegalName { get; set; }
     public string Gstin { get; set; }
 }
 
-//  Step 2
-//  Data context is the representative of the database in the code
-//  data context class inherits from DbContext class
 public class SalesManagementContext : DbContext
 {
-    //  Step 3
-    //  Every table is represented by DbSet<T> where T is the entity class
     public DbSet<Customer> Customers { get; set; }
 
-    //  Step 4
-    //  DbContext needs to know the database driver and connection string to connect
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        //  Step 5
         optionsBuilder.UseSqlServer(
             @"Data Source=(localdb)\MSSQLLocalDb; Initial Catalog=SalesManagement;Integrated Security=true");
     }
@@ -37,13 +32,13 @@ public class SalesManagementContext : DbContext
 
 internal class Program
 {
-    static void Main(string[] args)
+    //  Since C# 7.1, we can declare the Main method as async Task
+    //  https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-version-history#c-version-71
+    //  https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/program-structure/main-command-line#async-main-return-values
+    static async Task Main(string[] args)
     {
-        //  Step 6
-        //  Creating the instance of data context
         var context = new SalesManagementContext();
-        int countOfCustomers = context.Customers.Count();
 
-        Console.WriteLine($"Currently we have {countOfCustomers} customers");
+        Console.WriteLine($"Currently we have {await context.Customers.CountAsync()} customers");
     }
 }
