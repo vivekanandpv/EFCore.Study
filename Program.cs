@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EFCore.Study;
 
-//  Instruction: Please populate the CustomerAddress table with some test data
-
 public class CustomerAddress
 {
     public int AddressId { get; set; }
@@ -39,17 +37,14 @@ public class SalesManagementContext : DbContext
             @"Data Source=(localdb)\MSSQLLocalDb; Initial Catalog=SalesManagement;Integrated Security=true");
     }
 
-    //  To customize the entity structure, we use OnModelCreating
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //base.OnModelCreating(modelBuilder); //  This is a no-op
         modelBuilder.Entity<Customer>()
-            .ToTable("Customer");   //  This string value can be dynamically set,
-                                    //  which is not the case with attributes
+            .ToTable("Customer");
 
         modelBuilder.Entity<CustomerAddress>()
             .ToTable("CustomerAddress")
-            .HasKey(ca => ca.AddressId);   //  Defining a non-conventional key.
+            .HasKey(ca => ca.AddressId);
     }
 }
 
@@ -70,7 +65,9 @@ internal class Program
     {
         var context = new SalesManagementContext();
 
-        await context.Customers.ForEachAsync(c =>
+        //  Many side is not loaded into one side.
+        //  Also possible: Include("Addresses"), but not recommended
+        await context.Customers.Include(c => c.Addresses).ForEachAsync(c =>
         {
             Console.WriteLine($"{c.CustomerId} -> {c.LegalName}");
         });
