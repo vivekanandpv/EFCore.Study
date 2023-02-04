@@ -41,7 +41,7 @@ internal class Program
     {
         //  Step 6
         //  Creating the instance of data context
-        var context = new SalesManagementContext();
+        using var context = new SalesManagementContext();
         int countOfCustomers = context.Customers.Count();
 
         Console.WriteLine($"Currently we have {countOfCustomers} customers");
