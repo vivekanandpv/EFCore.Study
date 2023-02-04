@@ -23,6 +23,41 @@ public class Customer
     public string LegalName { get; set; }
     public string Gstin { get; set; }
     public IList<CustomerAddress> Addresses { get; set; } = new List<CustomerAddress>();
+    public IList<Invoice> Invoices { get; set; } = new List<Invoice>();
+}
+
+public class Product
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; }
+    public double Price { get; set; }
+    public double TaxRate { get; set; }
+    public IList<LineItem> LineItems { get; set; } = new List<LineItem>();
+}
+
+public class Invoice
+{
+    public int InvoiceId { get; set; }
+    public DateTime InvoiceDate { get; set; }
+    public int AddressId { get; set; }
+    public string Narration { get; set; }
+    public int CustomerId { get; set; }
+    public Customer Customer { get; set; }
+    public IList<LineItem> LineItems { get; set; } = new List<LineItem>();
+}
+
+public class LineItem
+{
+    public int InvoiceId { get; set; }
+    public Invoice Invoice { get; set; }
+    public int ProductId { get; set; }
+    public Product Product { get; set; }
+    public double BasePrice { get; set; }
+    public double TaxRate { get; set; }
+    public double Quantity { get; set; }
+    public double TaxableAmount { get; set; }
+    public double TaxAmount { get; set; }
+    public double LineAmount { get; set; }
 }
 
 
@@ -31,6 +66,11 @@ public class SalesManagementContext : DbContext
 {
     public DbSet<Customer> Customers { get; set; }
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
+
+    //  New entities added
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Invoice> Invoices { get; set; }
+    public DbSet<LineItem> LineItems { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -50,6 +90,17 @@ public class SalesManagementContext : DbContext
         modelBuilder.Entity<CustomerAddress>()
             .ToTable("CustomerAddress")
             .HasKey(ca => ca.AddressId);   //  Defining a non-conventional key.
+
+        modelBuilder.Entity<Product>()
+            .ToTable("Product");
+
+        modelBuilder.Entity<Invoice>()
+            .ToTable("Invoice");
+
+        modelBuilder.Entity<LineItem>()
+            .ToTable("LineItem")
+            //  Defining a composite key
+            .HasKey(li => new { InvoiceId = li.InvoiceId, ProductId = li.ProductId });
     }
 }
 
@@ -70,50 +121,8 @@ internal class Program
     {
         using var context = new SalesManagementContext();
 
-        //  To add a related entity, there are two approaches
-        //  1. create the related entity with primary entity's id
-        //  (ensure foreign key), and add the new object as usual.
-        //  2. add the related entity to the primary entity's collection
-        //  and save as usual
-
-        //  Approach 1
-        var address = new CustomerAddress
-        {
-            CustomerId = 1, //  required
-            AddressLine1 = "Line 1",
-            AddressLine2 = "Line 2",
-            AddressLine3 = "Line 3",
-            City = "Bengaluru",
-            Pin = 560085,
-            StateCode = "Karnataka",
-        };
-
-        context.CustomerAddresses.Add(address);
-
-        //  Approach 2
-        var address2 = new CustomerAddress
-        {
-            //  CustomerId is not required
-            AddressLine1 = "Line 21",
-            AddressLine2 = "Line 22",
-            AddressLine3 = "Line 23",
-            City = "Bengaluru",
-            Pin = 560086,
-            StateCode = "Karnataka",
-        };
-
-        var customer = await context.Customers.FirstAsync(c => c.CustomerId == 2);
-        customer.Addresses.Add(address2);
-        
-        var changes = context.ChangeTracker.Entries();
-
-        //  Ensuring the addresses are added
-        foreach (var entityEntry in changes)
-        {
-            Console.WriteLine($"The entity {entityEntry.Entity} is: {entityEntry.State}");
-        }
-
-        //  If we save, it emits INSERT INTO on the database
-        await context.SaveChangesAsync();
+        Console.WriteLine($"We have {context.Invoices.Count()} invoices");
+        Console.WriteLine($"We have {context.Products.Count()} products");
+        Console.WriteLine($"We have {context.LineItems.Count()} line items");
     }
 }
