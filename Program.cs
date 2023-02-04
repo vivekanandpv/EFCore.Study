@@ -4,8 +4,6 @@ using Microsoft.Extensions.Logging;
 
 namespace EFCore.Study;
 
-//  Instruction: Please populate the CustomerAddress table with some test data
-
 public class CustomerAddress
 {
     public int AddressId { get; set; }
@@ -43,10 +41,8 @@ public class SalesManagementContext : DbContext
             @"Data Source=(localdb)\MSSQLLocalDb; Initial Catalog=SalesManagement;Integrated Security=true");
     }
 
-    //  To customize the entity structure, we use OnModelCreating
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //base.OnModelCreating(modelBuilder); //  This is a no-op
         modelBuilder.Entity<Customer>()
             .ToTable("Customer");   //  This string value can be dynamically set,
                                     //  which is not the case with attributes
@@ -74,48 +70,26 @@ internal class Program
     {
         using var context = new SalesManagementContext();
 
-        //  The change tracker in the data context keeps track of all the property changes we make
-        //  To facilitate this, by default, all the entities are tracked
-        //  This obviously has a small overhead. If you think there is no need to track the entities
-        //  you can disable tracking by attaching AsNoTracking()
-        var customer = await context.Customers.FirstAsync(c => c.CustomerId == 1);
+        //  To add to a primary entity, we create an object
+        //  Then add it to the DbSet
 
-        //  Because this entity is tracked, any change we make, is tracked
-        customer.Gstin = "HELLO1234";
+        //  This object is standalone. Context doesn't know anything about it.
+        //  If the primary key is an identity, no arbitrary values for it are allowed
+        //  Default value of zero will be overridden by the database
+        var customer = new Customer { LegalName = "Philips India Pvt Ltd", Gstin = "PHLIPS7845" };
 
-        //  getting all the changes the context has detected
+        //  Adding to the DbSet
+        context.Customers.Add(customer);
+
         var changes = context.ChangeTracker.Entries();
 
-
-        //  enumerating the changes
+        //  Ensuring the Customer is added
         foreach (var entityEntry in changes)
-        {
-            Console.WriteLine($"Original Value: {entityEntry.OriginalValues[nameof(Customer.Gstin)]}");
-            Console.WriteLine($"Current Value: {entityEntry.CurrentValues[nameof(Customer.Gstin)]}");
-        }
-
-        //  Now that this change is tracked, we can save the changes if we wish
-        //  this will emit UPDATE statements on the database
-        int result = await context.SaveChangesAsync();  //  returns the number of records updated
-
-        Console.WriteLine($"We have updated {result} records");
-
-        //  To delete a record, first you need to fetch it
-        var address = await context.CustomerAddresses.FirstAsync();
-
-        //  Then, it has to be removed from the DbSet
-        context.CustomerAddresses.Remove(address);
-
-        //  enumerating the changes
-        var newChanges = context.ChangeTracker.Entries();
-
-        //  Ensuring the Customer is unchanged and address is deleted
-        foreach (var entityEntry in newChanges)
         {
             Console.WriteLine($"The entity {entityEntry.Entity} is: {entityEntry.State}");
         }
 
-        //  If we save, it emits DELETE on the database
+        //  If we save, it emits INSERT INTO on the database
         await context.SaveChangesAsync();
     }
 }
