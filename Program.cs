@@ -63,7 +63,7 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var context = new SalesManagementContext();
+        using var context = new SalesManagementContext();
 
         //  Many side is not loaded into one side.
         //  Also possible: Include("Addresses"), but not recommended
