@@ -68,7 +68,7 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var context = new SalesManagementContext();
+        using var context = new SalesManagementContext();
 
         await context.Customers.ForEachAsync(c =>
         {
