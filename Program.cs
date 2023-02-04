@@ -37,7 +37,7 @@ internal class Program
     //  https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/program-structure/main-command-line#async-main-return-values
     static async Task Main(string[] args)
     {
-        var context = new SalesManagementContext();
+        using var context = new SalesManagementContext();
 
         Console.WriteLine($"Currently we have {await context.Customers.CountAsync()} customers");
     }
