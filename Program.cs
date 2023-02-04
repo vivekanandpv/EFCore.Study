@@ -41,7 +41,7 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var context = new SalesManagementContext();
+        using var context = new SalesManagementContext();
 
         //  IQueryable<T> is a subtype of IEnumerable<T>
         //  https://learn.microsoft.com/en-us/dotnet/api/system.linq.iqueryable-1?view=net-7.0
