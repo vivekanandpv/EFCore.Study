@@ -70,20 +70,44 @@ internal class Program
     {
         using var context = new SalesManagementContext();
 
-        //  To add to a primary entity, we create an object
-        //  Then add it to the DbSet
+        //  To add a related entity, there are two approaches
+        //  1. create the related entity with primary entity's id
+        //  (ensure foreign key), and add the new object as usual.
+        //  2. add the related entity to the primary entity's collection
+        //  and save as usual
 
-        //  This object is standalone. Context doesn't know anything about it.
-        //  If the primary key is an identity, no arbitrary values for it are allowed
-        //  Default value of zero will be overridden by the database
-        var customer = new Customer { LegalName = "Philips India Pvt Ltd", Gstin = "PHLIPS7845" };
+        //  Approach 1
+        var address = new CustomerAddress
+        {
+            CustomerId = 1, //  required
+            AddressLine1 = "Line 1",
+            AddressLine2 = "Line 2",
+            AddressLine3 = "Line 3",
+            City = "Bengaluru",
+            Pin = 560085,
+            StateCode = "Karnataka",
+        };
 
-        //  Adding to the DbSet
-        context.Customers.Add(customer);
+        context.CustomerAddresses.Add(address);
 
+        //  Approach 2
+        var address2 = new CustomerAddress
+        {
+            //  CustomerId is not required
+            AddressLine1 = "Line 21",
+            AddressLine2 = "Line 22",
+            AddressLine3 = "Line 23",
+            City = "Bengaluru",
+            Pin = 560086,
+            StateCode = "Karnataka",
+        };
+
+        var customer = await context.Customers.FirstAsync(c => c.CustomerId == 2);
+        customer.Addresses.Add(address2);
+        
         var changes = context.ChangeTracker.Entries();
 
-        //  Ensuring the Customer is added
+        //  Ensuring the addresses are added
         foreach (var entityEntry in changes)
         {
             Console.WriteLine($"The entity {entityEntry.Entity} is: {entityEntry.State}");
